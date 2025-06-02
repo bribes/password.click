@@ -149,7 +149,6 @@ function changeFilled() {
 
     regeneratePass()
 }
-changeFilled()
 
 function resizeInput() {
     let span = document.getElementById("hidden-span");
@@ -169,7 +168,10 @@ async function regeneratePass() {
     secret.value = password;
     resizeInput()
 }
-regeneratePass()
+window.addEventListener('load', () => {
+    regeneratePass()
+    changeFilled()
+})
 
 window.setSpecial = (addChars) => {
     specialChars = addChars;

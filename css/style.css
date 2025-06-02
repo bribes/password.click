@@ -135,7 +135,6 @@ input[type="range"]::-moz-range-progress {
     font-size: 32px;
     font-family: 'Inconsolata';
     font-weight: 500;
-    width: fit-content;
     color: #89D4E6;
     -webkit-transition: all 200ms linear;
     -ms-transition: all 200ms linear;
