@@ -129,11 +129,13 @@ function changeFilled() {
 
     const sliderWidth = lengthinp.offsetWidth;
     const thumbWidth = 16;
-    const labelWidth = rangeLabel.offsetWidth;
-
     const trackWidth = sliderWidth - thumbWidth;
 
     const thumbCenterX = percent * trackWidth + thumbWidth / 2;
+
+    rangeLabel.textContent = val;
+    length = val;
+    const labelWidth = rangeLabel.offsetWidth;
 
     const clampedLeft = Math.min(
         Math.max(thumbCenterX, labelWidth / 2),
@@ -142,13 +144,12 @@ function changeFilled() {
 
     rangeLabel.style.left = `${clampedLeft - labelWidth / 2}px`;
 
-    rangeLabel.textContent = val;
-
     const fillPercent = (thumbCenterX / sliderWidth) * 100;
     lengthinp.style.setProperty("--percent", `${fillPercent}%`);
 
-    length = lengthinp.value;
+    regeneratePass()
 }
+changeFilled()
 
 function resizeInput() {
     let span = document.getElementById("hidden-span");
@@ -166,11 +167,9 @@ async function regeneratePass() {
         special: specialChars
     });
     secret.value = password;
-    changeFilled()
     resizeInput()
 }
-
-window.addEventListener('load', regeneratePass);
+regeneratePass()
 
 window.setSpecial = (addChars) => {
     specialChars = addChars;
@@ -181,6 +180,7 @@ window.setSpecial = (addChars) => {
         document.querySelector('#yes').classList.remove('toggled');
         document.querySelector('#no').classList.add('toggled');
     }
+    regeneratePass()
 }
 window.setSpecial(specialChars)
 
