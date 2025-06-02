@@ -26,96 +26,74 @@ const DefaultOptions = {
     includeNumber: false,
 };
 
-async function generatePassword(options) {
-    // Merge default options with user-provided ones
+function generatePassword(options) {
     const o = Object.assign({}, DefaultOptions, options);
 
     if (!o.special) o.minSpecial = 0;
+    sanitizePasswordLength(o);
 
-    // Sanitize password length
-    sanitizePasswordLength(o, true);
+    const positions = generatePositions(o);
+    shuffleArray(positions);
 
-    const minLength = o.minUppercase + o.minLowercase + o.minNumber + o.minSpecial;
-    if (o.length < minLength) {
-        o.length = minLength;
-    }
+    const charSets = buildCharacterSets(o);
+    return generatePasswordFromPositions(o, positions, charSets);
+}
 
+function generatePositions(options) {
     const positions = [];
-    populateCharacterPositions(o, positions);
+    positions.push(...Array(options.minLowercase).fill("l"));
+    positions.push(...Array(options.minUppercase).fill("u"));
+    positions.push(...Array(options.minNumber).fill("n"));
+    positions.push(...Array(options.minSpecial).fill("s"));
 
-    // Shuffle positions
-    await shuffleArray(positions);
-
-    // Define character sets
-    const { lowercaseCharSet, uppercaseCharSet, numberCharSet, specialCharSet, allCharSet } = buildCharacterSets(o);
-
-    return generatePasswordFromPositions(o, positions, { lowercaseCharSet, uppercaseCharSet, numberCharSet, specialCharSet, allCharSet });
-}
-
-// Populate positions for different character types
-function populateCharacterPositions(options, positions) {
-    for (let i = 0; i < options.minLowercase; i++) positions.push("l");
-    for (let i = 0; i < options.minUppercase; i++) positions.push("u");
-    for (let i = 0; i < options.minNumber; i++) positions.push("n");
-    for (let i = 0; i < options.minSpecial; i++) positions.push("s");
     while (positions.length < options.length) positions.push("a");
+    return positions;
 }
 
-// Build character sets based on options
 function buildCharacterSets(options) {
-    let lowercaseCharSet = "abcdefghijkmnopqrstuvwxyz" + (options.ambiguous ? "l" : "");
-    let uppercaseCharSet = "ABCDEFGHJKLMNPQRSTUVWXYZ" + (options.ambiguous ? "IO" : "");
-    let numberCharSet = "23456789" + (options.ambiguous ? "01" : "");
-    let specialCharSet = "!@#$%^&*";
+    const lowercase = "abcdefghijkmnopqrstuvwxyz" + (options.ambiguous ? "l" : "");
+    const uppercase = "ABCDEFGHJKLMNPQRSTUVWXYZ" + (options.ambiguous ? "IO" : "");
+    const numbers = "23456789" + (options.ambiguous ? "01" : "");
+    const special = "!@#$%^&*";
 
-    let allCharSet = "";
-    if (options.lowercase) allCharSet += lowercaseCharSet;
-    if (options.uppercase) allCharSet += uppercaseCharSet;
-    if (options.number) allCharSet += numberCharSet;
-    if (options.special) allCharSet += specialCharSet;
+    let all = "";
+    if (options.lowercase) all += lowercase;
+    if (options.uppercase) all += uppercase;
+    if (options.number) all += numbers;
+    if (options.special) all += special;
 
-    return { lowercaseCharSet, uppercaseCharSet, numberCharSet, specialCharSet, allCharSet };
+    return { lowercase, uppercase, numbers, special, all };
 }
 
-// Generate password based on shuffled positions
-async function generatePasswordFromPositions(options, positions, charSets) {
-    let password = "";
-    for (let i = 0; i < options.length; i++) {
-        let positionChars;
-        switch (positions[i]) {
-            case "l": positionChars = charSets.lowercaseCharSet; break;
-            case "u": positionChars = charSets.uppercaseCharSet; break;
-            case "n": positionChars = charSets.numberCharSet; break;
-            case "s": positionChars = charSets.specialCharSet; break;
-            case "a": positionChars = charSets.allCharSet; break;
+function generatePasswordFromPositions(options, positions, charSets) {
+    return positions.map(pos => {
+        switch (pos) {
+            case "l": return randomChar(charSets.lowercase);
+            case "u": return randomChar(charSets.uppercase);
+            case "n": return randomChar(charSets.numbers);
+            case "s": return randomChar(charSets.special);
+            case "a": return randomChar(charSets.all);
         }
-
-        const randomCharIndex = await randomNumber(0, positionChars.length - 1);
-        password += positionChars.charAt(randomCharIndex);
-    }
-    return password;
+    }).join('');
 }
 
-function sanitizePasswordLength(options, forGeneration) {
-    let minUppercaseCalc = options.uppercase && options.minUppercase <= 0 ? 1 : options.minUppercase;
-    let minLowercaseCalc = options.lowercase && options.minLowercase <= 0 ? 1 : options.minLowercase;
-    let minNumberCalc = options.number && options.minNumber <= 0 ? 1 : options.minNumber;
-    let minSpecialCalc = options.special && options.minSpecial <= 0 ? 1 : options.minSpecial;
-
-    options.length = Math.max(options.length, minUppercaseCalc + minLowercaseCalc + minNumberCalc + minSpecialCalc);
-
-    if (forGeneration) {
-        Object.assign(options, { minUppercase: minUppercaseCalc, minLowercase: minLowercaseCalc, minNumber: minNumberCalc, minSpecial: minSpecialCalc });
-    }
+function randomChar(set) {
+    return set[Math.floor(Math.random() * set.length)];
 }
 
-async function randomNumber(min, max) {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
+function sanitizePasswordLength(options) {
+    options.length = Math.max(
+        options.length,
+        options.uppercase ? Math.max(1, options.minUppercase) : 0,
+        options.lowercase ? Math.max(1, options.minLowercase) : 0,
+        options.number ? Math.max(1, options.minNumber) : 0,
+        options.special ? Math.max(1, options.minSpecial) : 0
+    );
 }
 
-async function shuffleArray(array) {
+function shuffleArray(array) {
     for (let i = array.length - 1; i > 0; i--) {
-        const j = await randomNumber(0, i);
+        const j = Math.floor(Math.random() * (i + 1));
         [array[i], array[j]] = [array[j], array[i]];
     }
 }
@@ -124,67 +102,47 @@ function changeFilled() {
     const val = +lengthinp.value;
     const min = +lengthinp.min;
     const max = +lengthinp.max;
-
     const percent = (val - min) / (max - min);
-
     const sliderWidth = lengthinp.offsetWidth;
-    const thumbWidth = 16;
-    const trackWidth = sliderWidth - thumbWidth;
-
-    const thumbCenterX = percent * trackWidth + thumbWidth / 2;
-
+    const trackWidth = sliderWidth - 16;
+    const thumbCenterX = percent * trackWidth + 8;
     rangeLabel.textContent = val;
     length = val;
     const labelWidth = rangeLabel.offsetWidth;
-
-    const clampedLeft = Math.min(
-        Math.max(thumbCenterX, labelWidth / 2),
-        sliderWidth - labelWidth / 2
-    );
-
+    const clampedLeft = Math.min(Math.max(thumbCenterX, labelWidth / 2), sliderWidth - labelWidth / 2);
     rangeLabel.style.left = `${clampedLeft - labelWidth / 2}px`;
-
-    const fillPercent = (thumbCenterX / sliderWidth) * 100;
-    lengthinp.style.setProperty("--percent", `${fillPercent}%`);
-
-    regeneratePass()
+    lengthinp.style.setProperty("--percent", `${(thumbCenterX / sliderWidth) * 100}%`);
+    regeneratePass();
 }
 
 function resizeInput() {
-    let span = document.getElementById("hidden-span");
-
+    const span = document.getElementById("hidden-span");
     span.textContent = secret.value || " ";
-    secret.style.width = (span.offsetWidth + 32) + "px";
+    secret.style.width = `${span.offsetWidth + 32}px`;
 }
 
 lengthinp.addEventListener('input', changeFilled);
 secret.addEventListener('input', resizeInput);
 
-async function regeneratePass() {
-    password = await generatePassword({
-        length,
-        special: specialChars
-    });
+function regeneratePass() {
+    password = generatePassword({ length, special: specialChars });
     secret.value = password;
-    resizeInput()
+    resizeInput();
 }
+
 window.addEventListener('load', () => {
-    regeneratePass()
-    changeFilled()
-})
+    regeneratePass();
+    changeFilled();
+});
 
 window.setSpecial = (addChars) => {
     specialChars = addChars;
-    if (addChars) {
-        document.querySelector('#yes').classList.add('toggled');
-        document.querySelector('#no').classList.remove('toggled');
-    } else {
-        document.querySelector('#yes').classList.remove('toggled');
-        document.querySelector('#no').classList.add('toggled');
-    }
-    regeneratePass()
-}
-window.setSpecial(specialChars)
+    document.querySelector('#yes').classList.toggle('toggled', addChars);
+    document.querySelector('#no').classList.toggle('toggled', !addChars);
+    regeneratePass();
+};
+
+window.setSpecial(specialChars);
 
 function fallbackCopyTextToClipboard(text) {
     var textArea = document.createElement("textarea");
@@ -221,7 +179,7 @@ function copyTextToClipboard(text) {
     });
 }
 
-document.getElementById('secret').addEventListener('click', () => copyTextToClipboard(password))
+document.getElementById('secret').addEventListener('click', () => copyTextToClipboard(password));
 
 tippy('#secret', {
     content: "Copied!",
