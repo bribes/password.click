@@ -1,0 +1,13 @@
+{
+    "short_name": "password.click",
+    "name": "Password Generator, password click",
+    "icons": [
+        {
+            "src": "https://password.click/favicon.ico",
+            "sizes": "27x32",
+            "type": "image/png"
+        }
+    ],
+    "start_url": "/",
+    "display": "standalone"
+}

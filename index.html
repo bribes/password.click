@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="en-US">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="password.click">
+    <meta name="application-name" content="password.click">
+
+    <title>Password Generator | password.click</title>
+    <meta name="title" content="Password Generator | password.click" />
+    <meta name="description" content="Generate random ultra-secure passwords with just a click. (Open-source)" />
+    <meta name="theme-color" content="#000000" />
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://password.click" />
+    <meta property="og:image" content="https://password.click/icons/2fa.png" />
+    <meta property="og:title" content="Password Generator | password.click" />
+    <meta property="og:site_name" content="password.click" />
+    <meta property="og:description" content="Generate random ultra-secure passwords with just a click. (Open-source)" />
+
+    <meta property="twitter:url" content="https://password.click" />
+    <meta property="twitter:title" content="Password Generator | password.click" />
+    <meta property="twitter:description" content="Generate random ultra-secure passwords with just a click. (Open-source)" />
+    <meta property="twitter:image" content="https://password.click/icons/2fa.png" />
+
+    <link rel="preload stylesheet" href="./css/style.css" as="style">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@200..900&display=block" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tippy.js/6.3.7/animations/shift-away.css" />
+    <link rel="manifest" href="/manifest.json">
+
+    <link rel="icon" href="/favicon.ico">
+    <link rel="apple-touch-icon" href="/favicon.ico">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.11.8/umd/popper.min.js"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tippy.js/6.3.7/tippy.umd.min.js"
+        crossorigin="anonymous"></script>
+    <script src="./js/password.js" defer></script>
+    <script>window.addEventListener("load",()=>document.body.classList.remove("preload"))</script>
+</head>
+
+<body class="preload">
+    <a rel="nofollow" href="https://github.com/bribes/password.click" target="_blank" title="GitHub Repository"
+        class="github"><img src="./icons/github.png" alt="GitHub Icon" title="GitHub"></a>
+    <div class="passOuter">
+        <h1>password.click</h1>
+        <span id="hidden-span" class="hidden-span"></span>
+        <form>
+            <input type="text" id="secret" placeholder="Password" style="width: 258px;" readonly>
+        </form>
+        <p class="copytext">click to copy / <a href="javascript:regeneratePass()" class="regenerate">regenerate</a></p>
+        <div class="settings">
+            <div class="length">
+                <p>length: </p>
+                <input id="lengthinp" min="4" max="32" value="14" type="range">
+                <div class="range-label" id="rangeLabel">14</div>
+            </div>
+            <p id="special">special characters: <a href="javascript:setSpecial(true)" id="yes">yes</a> / <a class="toggled" href="javascript:setSpecial(false)" id="no">no</a></p>
+        </div>
+    </div>
+</body>
+
+</html>
