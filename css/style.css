@@ -136,9 +136,9 @@ input[type="range"]::-moz-range-progress {
     font-family: 'Inconsolata';
     font-weight: 500;
     color: #89D4E6;
-    -webkit-transition: all 200ms linear;
-    -ms-transition: all 200ms linear;
-    transition: all 200ms linear;
+    -webkit-transition: border 200ms linear;
+    -ms-transition: border 200ms linear;
+    transition: border 200ms linear;
     -webkit-font-smoothing: antialiased;
 }
 
