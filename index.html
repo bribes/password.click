@@ -61,5 +61,6 @@
             <p id="special">special characters: <a href="javascript:setSpecial(true)" id="yes">yes</a> / <a class="toggled" href="javascript:setSpecial(false)" id="no">no</a></p>
         </div>
     </div>
+    <script>if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js'));</script>
 </body>
 </html>
