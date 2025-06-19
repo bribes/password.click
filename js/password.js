@@ -27,59 +27,46 @@ const DefaultOptions = {
 };
 
 function generatePassword(options) {
-    const o = Object.assign({}, DefaultOptions, options);
+    const o = { ...DefaultOptions, ...options };
 
     if (!o.special) o.minSpecial = 0;
     sanitizePasswordLength(o);
 
-    const positions = generatePositions(o);
-    shuffleArray(positions);
-
+    const positions = shuffleArray(generatePositions(o));
     const charSets = buildCharacterSets(o);
-    return generatePasswordFromPositions(o, positions, charSets);
+
+    return positions.map(pos => randomChar(charSets[pos] || charSets.all)).join('');
 }
 
 function generatePositions(options) {
-    const positions = [];
-    positions.push(...Array(options.minLowercase).fill("l"));
-    positions.push(...Array(options.minUppercase).fill("u"));
-    positions.push(...Array(options.minNumber).fill("n"));
-    positions.push(...Array(options.minSpecial).fill("s"));
-
-    while (positions.length < options.length) positions.push("a");
-    return positions;
+    return [
+        ...Array(options.minLowercase).fill("lowercase"),
+        ...Array(options.minUppercase).fill("uppercase"),
+        ...Array(options.minNumber).fill("numbers"),
+        ...Array(options.minSpecial).fill("special"),
+        ...Array(Math.max(0, options.length - (
+            options.minLowercase +
+            options.minUppercase +
+            options.minNumber +
+            options.minSpecial
+        ))).fill("all")
+    ];
 }
 
-function buildCharacterSets(options) {
-    const lowercase = "abcdefghijkmnopqrstuvwxyz" + (options.ambiguous ? "l" : "");
-    const uppercase = "ABCDEFGHJKLMNPQRSTUVWXYZ" + (options.ambiguous ? "IO" : "");
-    const numbers = "23456789" + (options.ambiguous ? "01" : "");
-    const special = "!@#$%^&*";
-
-    let all = "";
-    if (options.lowercase) all += lowercase;
-    if (options.uppercase) all += uppercase;
-    if (options.number) all += numbers;
-    if (options.special) all += special;
-
-    return { lowercase, uppercase, numbers, special, all };
+function buildCharacterSets({ lowercase, uppercase, number, special, ambiguous }) {
+    return {
+        lowercase: "abcdefghijkmnopqrstuvwxyz" + (ambiguous ? "l" : ""),
+        uppercase: "ABCDEFGHJKLMNPQRSTUVWXYZ" + (ambiguous ? "IO" : ""),
+        numbers: "23456789" + (ambiguous ? "01" : ""),
+        special: "!@#$%^&*",
+        all: (lowercase ? "abcdefghijkmnopqrstuvwxyz" : "") +
+             (uppercase ? "ABCDEFGHJKLMNPQRSTUVWXYZ" : "") +
+             (number ? "23456789" : "") +
+             (special ? "!@#$%^&*" : "")
+    };
 }
 
-function generatePasswordFromPositions(options, positions, charSets) {
-    return positions.map(pos => {
-        switch (pos) {
-            case "l": return randomChar(charSets.lowercase);
-            case "u": return randomChar(charSets.uppercase);
-            case "n": return randomChar(charSets.numbers);
-            case "s": return randomChar(charSets.special);
-            case "a": return randomChar(charSets.all);
-        }
-    }).join('');
-}
-
-function randomChar(set) {
-    return set[Math.floor(Math.random() * set.length)];
-}
+const randomChar = set => set[Math.floor(Math.random() * set.length)];
 
 function sanitizePasswordLength(options) {
     options.length = Math.max(
@@ -92,26 +79,22 @@ function sanitizePasswordLength(options) {
 }
 
 function shuffleArray(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-    }
+    return array.sort(() => Math.random() - 0.5);
 }
 
-function changeFilled() {
+function updateRangeDisplay() {
     const val = +lengthinp.value;
-    const min = +lengthinp.min;
-    const max = +lengthinp.max;
-    const percent = (val - min) / (max - min);
+    const percent = (val - lengthinp.min) / (lengthinp.max - lengthinp.min);
     const sliderWidth = lengthinp.offsetWidth;
     const trackWidth = sliderWidth - 16;
     const thumbCenterX = percent * trackWidth + 8;
+
     rangeLabel.textContent = val;
-    length = val;
-    const labelWidth = rangeLabel.offsetWidth;
-    const clampedLeft = Math.min(Math.max(thumbCenterX, labelWidth / 2), sliderWidth - labelWidth / 2);
-    rangeLabel.style.left = `${clampedLeft - labelWidth / 2}px`;
+    rangeLabel.style.left = `${Math.max(Math.min(thumbCenterX, sliderWidth - rangeLabel.offsetWidth / 2), rangeLabel.offsetWidth / 2) - rangeLabel.offsetWidth / 2}px`;
+
     lengthinp.style.setProperty("--percent", `${(thumbCenterX / sliderWidth) * 100}%`);
+
+    length = val;
     regeneratePass();
 }
 
@@ -121,7 +104,7 @@ function resizeInput() {
     secret.style.width = `${span.offsetWidth + 32}px`;
 }
 
-lengthinp.addEventListener('input', changeFilled);
+lengthinp.addEventListener('input', updateRangeDisplay);
 secret.addEventListener('input', resizeInput);
 
 function regeneratePass() {
@@ -132,7 +115,7 @@ function regeneratePass() {
 
 window.addEventListener('load', () => {
     regeneratePass();
-    changeFilled();
+    updateRangeDisplay();
 });
 
 window.setSpecial = (addChars) => {
@@ -144,39 +127,33 @@ window.setSpecial = (addChars) => {
 
 window.setSpecial(specialChars);
 
+async function copyTextToClipboard(text) {
+    try {
+        await navigator.clipboard.writeText(text);
+        console.log('Copied!');
+    } catch {
+        fallbackCopyTextToClipboard(text);
+    }
+}
+
 function fallbackCopyTextToClipboard(text) {
-    var textArea = document.createElement("textarea");
+    const textArea = document.createElement("textarea");
     textArea.value = text;
 
-    textArea.style.top = "0";
-    textArea.style.left = "0";
-    textArea.style.position = "fixed";
+    Object.assign(textArea.style, { top: "0", left: "0", position: "fixed" });
 
     document.body.appendChild(textArea);
     textArea.focus();
     textArea.select();
 
     try {
-        var successful = document.execCommand('copy');
-        var msg = successful ? 'successful' : 'unsuccessful';
-        console.log('Fallback: Copying text command was ' + msg);
+        document.execCommand('copy');
+        console.log('Fallback: Copying text command was successful');
     } catch (err) {
-        console.error('Fallback: Oops, unable to copy', err);
+        console.error('Fallback: Unable to copy', err);
     }
 
     document.body.removeChild(textArea);
-}
-
-function copyTextToClipboard(text) {
-    if (!navigator.clipboard) {
-        fallbackCopyTextToClipboard(text);
-        return;
-    }
-    navigator.clipboard.writeText(text).then(function () {
-        console.log('Async: Copying to clipboard was successful!');
-    }, function (err) {
-        console.error('Async: Could not copy text: ', err);
-    });
 }
 
 document.getElementById('secret').addEventListener('click', () => copyTextToClipboard(password));
@@ -189,8 +166,6 @@ tippy('#secret', {
     theme: 'translucent',
     offset: [0, -12.5],
     onShow(instance) {
-        setTimeout(() => {
-            instance.hide();
-        }, 500);
+        setTimeout(() => instance.hide(), 500);
     }
 });
