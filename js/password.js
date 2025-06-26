@@ -107,7 +107,7 @@ function resizeInput() {
 lengthinp.addEventListener('input', updateRangeDisplay);
 secret.addEventListener('input', resizeInput);
 
-function regeneratePass() {
+window.regeneratePass = () => {
     password = generatePassword({ length, special: specialChars });
     secret.value = password;
     resizeInput();
