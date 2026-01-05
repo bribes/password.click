@@ -1,4 +1,4 @@
-const CACHE_NAME = 'password.click';
+const CACHE_NAME = 'password.click-v1';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting(); // Make this SW activate immediately
